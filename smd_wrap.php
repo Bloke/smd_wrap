@@ -77,6 +77,13 @@ if (!defined('txpinterface'))
  * * Conditionals: http://forum.textpattern.com/viewtopic.php?pid=256465#p256465
  */
 
+if (class_exists('\Textpattern\Tag\Registry')) {
+    Txp::get('\Textpattern\Tag\Registry')
+        ->register('smd_wrap')
+        ->register('smd_wrap_all')
+        ->register('smd_wrap_info');
+}
+
 /**
  * Wrap content with stuff and perform optional transforms on it.
  *
@@ -132,10 +139,12 @@ function smd_wrap($atts, $thing = NULL)
         if ($attr) {
             $custom_atts = array();
             $attribs = do_list($attr);
+
             foreach($attribs as $attdef) {
                 list($key, $val) = do_list($attdef, $param_delim);
                 $custom_atts[] = $key . '="' . $val . '"';
             }
+
             $attr = ' ' . join(' ', $custom_atts);
         }
 
@@ -211,55 +220,7 @@ function smd_wrap($atts, $thing = NULL)
                                 } elseif ($arg == "ucwords") {
                                     $out = mb_convert_case($out, MB_CASE_TITLE);
                                 } elseif ($arg == "title") {
-                                    // Inelegantly ported + extended for Unicode from David Gouch's JS title case script: thanks!
-                                    // http://individed.com/code/to-title-case/js/to-title-case.js
-                                    $has_unicode = @preg_match('/\pL/u', 'a');
-
-                                    $az = ($has_unicode) ? '\p{Lu}' : 'A-Z';
-                                    $wrd = ($has_unicode) ? '(?:\p{L}|\p{M}|\p{N}|\p{Pc})' : '\w';
-                                    $capsre = '/[' . $az . ']+|&|[' . $wrd . ']+[._][' . $wrd . ']+/';
-
-                                    $smalls = get_pref('smd_wrap_small_words', 'a(nd?|s|t)?|b(ut|y)|en|for|i[fn]|o[fnr]|t(he|o)|vs?\.?|via');
-                                    $smallre = '/^(' . $smalls . ')[ \-]/i';
-
-                                    $pat = '/([' . $wrd . '&`\'‘’"“.@:\/\{\(\[<>_]+-? *)/';
-                                    $ret = array();
-                                    preg_match_all($pat, $out, $matches, PREG_PATTERN_ORDER|PREG_OFFSET_CAPTURE);
-
-                                    foreach ($matches[0] as $it) {
-                                        $match = $it[0];
-                                        $index = $it[1];
-                                        $idxm2 = $index - 2;
-                                        $length = mb_strlen($match);
-                                        $title = $out; // Copy the original since we're working on $out directly
-
-                                        // Fudge because mb_substr with negative start counts from end of string in PHP
-                                        $idxm1 = (($index-1) < 0) ? 0 : $index - 1;
-                                        $offset = (($index-1) < 0) ? 1 : 2;
-
-                                        if ($index > 0
-                                            && ( $title{$idxm2} !== ":" )
-                                            && ( preg_match($smallre, $match) > 0 )
-                                        ) {
-                                            $out = mb_substr($out, 0, $index) . mb_strtolower($match) . mb_substr($out, $index+$length);
-                                            continue;
-                                        }
-
-                                        if (preg_match('/[\'\"_{(\[]/', mb_substr($title, $idxm1, $offset)) > 0) {
-                                            $out = mb_substr($out, 0, $index) . $match{0} . @mb_strtoupper($match{1}) . mb_substr($match, 2). mb_substr($out, $index+$length);
-                                            continue;
-                                        }
-
-                                        if (
-                                            ( preg_match($capsre, mb_substr($match, 1)) > 0 )
-                                            || ( preg_match('/[\])}]/', mb_substr($title, $idxm1, $offset)) > 0 )
-                                        ) {
-                                            $out = mb_substr($out, 0, $index) . $match . mb_substr($out, $index+$length);
-                                            continue;
-                                        }
-
-                                        $out = mb_substr($out, 0, $index) . mb_strtoupper($match{0}) . mb_substr($match, 1) . mb_substr($out, $index+$length);
-                                    }
+                                    $out = smd_wrap_title_case($out);
                                 }
                             }
 
@@ -512,20 +473,28 @@ function smd_wrap($atts, $thing = NULL)
     return ($out) ? doLabel($label, $labeltag).doTag($out, $wraptag, $class, $attr, $html_id) : '';
 }
 
-/*
- * Convenience to emulate v0.10 functionality
+/**
+ * Convenience to emulate v0.1.0 functionality.
+ *
+ * @param  array  $atts  Tag attribute name-value pairs
+ * @param  string $thing Contained content
+ * @return string
  */
-function smd_wrap_all($atts, $thing = NULL)
+function smd_wrap_all($atts, $thing = null)
 {
     $atts['data_mode'] = 'all';
 
     return smd_wrap($atts, $thing);
 }
 
-/*
- * Display the contents of the previous output in chained transform="form"
+/**
+ * Display the contents of the previous output in chained transform="form".
+ *
+ * @param  array  $atts  Tag attribute name-value pairs
+ * @param  string $thing Contained content
+ * @return string
  */ 
-function smd_wrap_info($atts, $thing = NULL)
+function smd_wrap_info($atts, $thing = null)
 {
     global $smd_wrap_data;
 
@@ -549,6 +518,74 @@ if (!function_exists('mb_ucfirst')) {
     {
         return mb_strtoupper(mb_substr($str, 0, 1)) . mb_substr($str, 1);
     }
+}
+
+/**
+ * Perform a more intelligent multibyte title case.
+ *
+ * original Title Case script © John Gruber <daringfireball.net>
+ * javascript port © David Gouch <individed.com>
+ * PHP port of the above by Kroc Camen <camendesign.com>
+ * From http://camendesign.co.uk/code/title-case
+ *
+ * @param  string $title The text to convert to title case
+ */
+function smd_wrap_title_case($title)
+{
+    // Remove HTML, storing it for later
+    //        HTML elements to ignore    | tags  | entities
+    $regx = '/<(code|var)[^>]*>.*?<\/\1>|<[^>]+>|&\S+;/';
+    preg_match_all($regx, $title, $html, PREG_OFFSET_CAPTURE);
+    $title = preg_replace($regx, '', $title);
+
+    // Find each word (including punctuation attached).
+    preg_match_all('/[\w\p{L}&`\'‘’"“\.@:\/\{\(\[<>_]+-? */u', $title, $m1, PREG_OFFSET_CAPTURE);
+    $smalls = get_pref('smd_wrap_small_words', 'a(nd?|s|t)?|b(ut|y)|en|for|i[fn]|o[fnr]|t(he|o)|vs?\.?|via');
+    $smallre = '/^(' . $smalls . ')[ \-]/i';
+
+    foreach ($m1[0] as &$m2) {
+        // Shorthand these- "match" and "index"
+        list($m, $i) = $m2;
+
+        // Correct offsets for multi-byte characters (`PREG_OFFSET_CAPTURE` returns *byte*-offset).
+        // Fix this by recounting the text before the offset using multi-byte aware `strlen`.
+        $i = mb_strlen(substr($title, 0, $i), 'UTF-8');
+
+        // Find words that should always be lowercase
+        // (never on the first word, and never if preceded by a colon).
+        $m = ($i > 0) && mb_substr($title, max(0, $i-2), 1, 'UTF-8') !== ':' &&
+            !preg_match('/[\x{2014}\x{2013}] ?/u', mb_substr($title, max(0, $i-2), 2, 'UTF-8')) &&
+             preg_match($smallre, $m)
+        ?   //... and convert them to lowercase.
+            mb_strtolower($m, 'UTF-8')
+
+        // Else: brackets and other wrappers.
+        : ( preg_match('/[\'"_{(\[‘“]/u', mb_substr($title, max(0, $i-1), 3, 'UTF-8'))
+        ?   // Convert first letter within wrapper to uppercase.
+            mb_substr($m, 0, 1, 'UTF-8').
+            mb_strtoupper(mb_substr($m, 1, 1, 'UTF-8'), 'UTF-8').
+            mb_substr($m, 2, mb_strlen($m, 'UTF-8')-2, 'UTF-8')
+
+        // Else: do not uppercase these cases.
+        : ( preg_match('/[\])}]/', mb_substr($title, max(0, $i-1), 3, 'UTF-8')) ||
+            preg_match('/[A-Z]+|&|\w+[._]\w+/u', mb_substr($m, 1, mb_strlen($m, 'UTF-8')-1, 'UTF-8'))
+        ?   $m
+            // If all else fails, then no more fringe-cases: uppercase the word.
+        :   mb_strtoupper(mb_substr($m, 0, 1, 'UTF-8'), 'UTF-8').
+            mb_substr($m, 1, mb_strlen($m, 'UTF-8'), 'UTF-8')
+        ));
+
+        // Resplice the title with the change (substr_replace() is not multi-byte aware).
+        $title = mb_substr($title, 0, $i, 'UTF-8').$m.
+             mb_substr($title, $i + mb_strlen($m, 'UTF-8'), mb_strlen($title, 'UTF-8'), 'UTF-8');
+    }
+
+    // Restore the HTML.
+    foreach ($html[0] as &$tag) {
+        $title = substr_replace($title, $tag[0], $tag[1], 0);
+    }
+
+    return $title;
 }
 
 # --- END PLUGIN CODE ---
