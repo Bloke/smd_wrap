@@ -163,6 +163,7 @@ function smd_wrap($atts, $thing = NULL)
         }
 
         $out = parse($truePart);
+        $has_data = false;
 
         if ($tag_mode) {
             $size_after_parsing = mb_strlen($out);
