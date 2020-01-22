@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2020-01-22
+
+* Register tags.
+* Add multi-byte support (Thanks, summer).
+* Use more intelligent title case transform (Thanks, Kroc Camen).
+* Silence has_data warning.
+
 ## 0.2.0 - 2012-03-21
 
 * Tests for Txp tag content akin to chh_if_data -- added `smd_wrap_all` tag to emulate v0.10 behaviour (thanks maniqui).
