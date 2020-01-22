@@ -1,0 +1,16 @@
+{
+  "name": "bloke/smd_wrap",
+  "description": "Textpattern plugin to conditionally transform and wrap stuff with tags and labels",
+  "keywords": ["textpattern", "plugin", "wrap", "transform", "alter", "textile", "post-process"],
+  "homepage": "https://github.com/bloke/smd_wrap",
+  "license": "GPL-2.0",
+  "type": "textpattern-plugin",
+  "support": {
+    "issues": "https://github.com/bloke/smd_wrap/issues",
+    "source": "https://github.com/bloke/smd_wrap"
+  },
+  "require": {
+    "textpattern/lock": ">=4.7.0",
+    "textpattern/installer": "*"
+  }
+}
