@@ -19,7 +19,7 @@ $plugin['name'] = 'smd_wrap';
 
 $plugin['version'] = '0.3.0';
 $plugin['author'] = 'Stef Dawson';
-$plugin['author_uri'] = 'http://stefdawson.com/';
+$plugin['author_uri'] = 'https://stefdawson.com/';
 $plugin['description'] = 'Conditionally transform and wrap stuff with tags and labels';
 
 // Plugin load order:
@@ -70,11 +70,11 @@ if (!defined('txpinterface'))
  *  -> Supports <txp:else />
  *
  * @author Stef Dawson
- * @link   http://stefdawson.com/
+ * @link   https://stefdawson.com/
  * @todo
- * * Security: http://forum.textpattern.com/viewtopic.php?pid=255560#p255560
+ * * Security: https://forum.textpattern.com/viewtopic.php?pid=255560#p255560
  * * Allow hidden pref to determine default transforms?
- * * Conditionals: http://forum.textpattern.com/viewtopic.php?pid=256465#p256465
+ * * Conditionals: https://forum.textpattern.com/viewtopic.php?pid=256465#p256465
  */
 
 if (class_exists('\Textpattern\Tag\Registry')) {
@@ -327,7 +327,7 @@ function smd_wrap($atts, $thing = NULL)
 
                             break;
                         case 'link':
-                            // From http://codesnippets.joyent.com/posts/show/2104
+                            // From http://web.archive.org/web/20120211121539/codesnippets.joyent.com/posts/show/2104
                             $pat = "@\b(https?://)?(([0-9a-zA-Z_!~*'().&=+$%-]+:)?[0-9a-zA-Z_!~*'().&=+$%-]+\@)?(([0-9]{1,3}\.){3}[0-9]{1,3}|([0-9a-zA-Z_!~*'()-]+\.)*([0-9a-zA-Z][0-9a-zA-Z-]{0,61})?[0-9a-zA-Z]\.[a-zA-Z]{2,6})(:[0-9]{1,4})?((/[0-9a-zA-Z_!~*'().;?:\@&=+$,%#-]+)*/?)@";
                             $text = (isset($xform[0]) && $xform[0] != '') ? $xform[0] : '$0';
                             $out = preg_replace($pat, '<a href="$0">'.$text.'</a>', $out);
@@ -604,11 +604,11 @@ If you want the plugin to wrap your content if there is _any_ content in its for
 
 h2. Installation / uninstallation
 
-Download the plugin from either "GitHub":https://github.com/Bloke/smd_wrap/releases, or the "software page":http://stefdawson.com/sw, paste the code into the TXP _Admin->Plugins_ pane, install and enable the plugin.
+Download the plugin from either "GitHub":https://github.com/Bloke/smd_wrap/releases, or the "software page":https://stefdawson.com/sw, paste the code into the TXP _Admin->Plugins_ pane, install and enable the plugin.
 
 To uninstall the plugin, simply delete the plugin from the _Admin->Plugins_ page
 
-Visit the "forum thread":http://forum.textpattern.com/viewtopic.php?id=37167 for more info or to report on the success or otherwise of the plugin.
+Visit the "forum thread":https://forum.textpattern.com/viewtopic.php?id=37167 for more info or to report on the success or otherwise of the plugin.
 
 h2. Tags: @<txp:smd_wrap>@ / @<txp:smd_wrap_all>@
 
@@ -651,14 +651,14 @@ Wrap the @item@ or tag's container with standard Txp @wraptag@ paraphernalia. Th
 ::: *ucwords* -- upper case first character of every word.
 ::: *title* -- intelligent(ish) version of ucwords that ignores small words and tries to leave intentional first-lower-case words (e.g. iPhone) alone. Works best on English but does support Unicode up to a point. You can specify your own list of words by creating a hidden pref called *smd_wrap_small_words*. List each word separated by a pipe. You may use regex strings if you wish but _no sanitization is done_ so be careful! The default list of ignored short words are: @a|an|and|as|at|but|by|en|for|if|in|of|on|or|the|to|vs?[.]?|via@
 :: *currency* -- format as a monetary value. Optional parameters:
-::: format string as defined in PHP's "money_format":http://uk.php.net/manual/en/function.money-format.php. If not set, @%.2n@ is used
+::: format string as defined in PHP's "money_format":https://uk.php.net/manual/en/function.money-format.php. If not set, @%.2n@ is used
 ::: locale string. Current locale used if not set
 :: *cut* -- chop the item at the given character/word limit, providing it is longer than the passed value. Note that if the item contains HTML tags then the output is likely to be spurious (wrong count, or with unclosed tags) so it's best to employ @strip_tags@ first. See "example 7":#smd_wrap_eg7. Arguments can be of the following form:
 ::: _some_number_ (plus optional @c@): chop at the given number of characters
 ::: _some_number_ (plus @w@): chop at the given number of words
 ::: _some_string_: the continuation character(s) to add to the end of the item if it has been truncated (e.g. @...@ or @&hellip;@)
-:: *date* or *time* -- treat the item as a date and/or time, formatting it according to the "strftime()":http://php.net/manual/en/function.strftime.php compatible string given as the first argument. The item can either be a numeric (UNIX) timestamp or an _English_ date string in an acceptable format. For datetime fields you could split the string first just to get the date portion.
-:: *escape* -- run the item through @htmlspecialchars()@. Use additional parameters to list optional "flags":http://php.net/manual/en/function.htmlspecialchars.php or use any of the following special values:
+:: *date* or *time* -- treat the item as a date and/or time, formatting it according to the "strftime()":https://php.net/manual/en/function.strftime.php compatible string given as the first argument. The item can either be a numeric (UNIX) timestamp or an _English_ date string in an acceptable format. For datetime fields you could split the string first just to get the date portion.
+:: *escape* -- run the item through @htmlspecialchars()@. Use additional parameters to list optional "flags":https://php.net/manual/en/function.htmlspecialchars.php or use any of the following special values:
 ::: *no_quotes* -- @ENT_NOQUOTES@
 ::: *double_quotes* -- @ENT_COMPAT@
 ::: *all_quotes* -- @ENT_QUOTES@
@@ -703,7 +703,7 @@ Wrap the @item@ or tag's container with standard Txp @wraptag@ paraphernalia. Th
 
 h2(#smd_wrap_eg1). Example 1: Link anchor
 
-bc. <txp:variable name="wiki" value="http://textpattern.net/wiki" />
+bc. <txp:variable name="docs" value="https://docs.textpattern.com/" />
 <txp:smd_wrap wraptag="div" class="external"
      transform="link|Textpattern documentation">
    <txp:variable name="wiki" />
@@ -711,7 +711,7 @@ bc. <txp:variable name="wiki" value="http://textpattern.net/wiki" />
 
 Returns:
 
-bc. <a href="http://textpattern.net/wiki">Textpattern documentation</a>
+bc. <a href="https://docs.textpattern.com/">Textpattern documentation</a>
 
 h2(#smd_wrap_eg2). Example 2: Date formatting
 
@@ -846,7 +846,7 @@ If you omitted the @25w@ or your chosen word count was higher than the number of
 
 h2. Author / credits
 
-Written by "Stef Dawson":http://stefdawson.com/contact. Thanks to the jakob for making a business case for creating this plugin, and of course the adi_wrap plugin for inspiration.
+Written by "Stef Dawson":https://stefdawson.com/contact. Thanks to the jakob for making a business case for creating this plugin, and of course the adi_wrap plugin for inspiration.
 # --- END PLUGIN HELP ---
 -->
 <?php
