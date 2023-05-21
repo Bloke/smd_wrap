@@ -286,7 +286,7 @@ function smd_wrap($atts, $thing = NULL)
                             $nd = (is_numeric($out)) ? $out : strtotime($out);
 
                             if ($nd !== false) {
-                                $out = strftime($xform[0], $nd);
+                                $out = safe_strftime($xform[0], $nd);
                             }
 
                             break;
